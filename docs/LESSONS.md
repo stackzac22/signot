@@ -239,3 +239,37 @@ revert it again.
 higher-level tool can mask which physical radio actually saw what. When one
 of several radios on the same box is suspect, query that radio directly
 rather than trusting an aggregated view.
+
+## The "new" spare radio turned out to be the old AP-crash dongle, relocated
+
+**Symptom:** while evaluating what chipset a spare "BrosTrend 650" dongle
+actually was, `lsusb`/`lsmod` on jacKed identified it as an RTL8821CU
+(driver `rtw88_8821cu`) — and its MAC address matched, exactly, the dongle
+from the earlier "x1's AP dongle firmware-crashes" incident above.
+
+**What this means:** it was never retired. It got physically moved from
+x1 (where it ran the AP) to jacKed (where it's now the capture radio) as
+part of the general radio reshuffling — "BrosTrend 650" is just the retail
+branding on a chipset already in this fleet's history under a different
+product name. A useful reminder that retail names and physical chipsets
+aren't a 1:1 mapping, and that inventory tracking by role/behavior (MAC,
+driver, dmesg signature) beats tracking by box label when radios move
+around often.
+
+**New issue found in the process:** with this dongle now running Kismet
+capture on jacKed, `dmesg` shows a non-fatal kernel `WARNING` in the
+driver's TX-power-lookup path (`rtw_get_tx_power_params`), firing
+repeatedly — 30 times in the first ~2 hours — specifically when the driver
+sets a new monitor-mode channel context, i.e. during normal channel-hopping
+capture. The system stayed responsive (normal load average) and Kismet kept
+running throughout, so this isn't the same class of failure as the RTNL
+deadlock above — it degrades gracefully rather than wedging the box — but
+it's a real, repeating driver defect on a chipset that already has a
+documented instability history in a different mode (AP). Treat this
+assignment as "working, being watched," not "resolved."
+
+**Lesson:** the same chipset can be simultaneously "the pragmatic fix for
+one problem" (closing the failover-automation gap) and "a still-open risk"
+(this WARNING loop) — those aren't in tension, they're just two different
+facts about the same piece of hardware that both need to stay visible
+rather than the good news quietly erasing the caveat.

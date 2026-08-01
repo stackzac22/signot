@@ -14,7 +14,7 @@ with it in practice.
 | OPi (raspyjackboy) | onboard WiFi | Unisoc `sprdwl_ng` (`unisoc_wifi`) | jack-link uplink | Working, but physically fragile — see antenna note below |
 | OPi (raspyjackboy) | USB — Panda Wireless PAU0F (AXE3000), WiFi 6E | MediaTek MT7921U (`mt7921u`, USB ID `0e8d:7961`) | Monitor-mode capture (Kismet), full 2.4/5/6 GHz, no DFS restriction | Working, with an unresolved wedge risk under sustained load (see LESSONS). **Now permanently assigned here** — no longer shuffled to jacKed (see OPEN-QUESTIONS.md). |
 | jacKed (Pi4B) | onboard WiFi | Broadcom `brcmfmac` | jack-link uplink **only** | Working — but confirmed via `iw phy` to have **no monitor mode at all**. Hard hardware limit, not a config issue. |
-| jacKed (Pi4B) | USB — none dedicated yet; BrosTrend 650 planned | Unconfirmed (pending `lsusb` check) | Monitor-mode capture / failover scanner | **Not actually available today** — jacKed has been borrowing the OPi's Panda by hand rather than owning a radio, which breaks its "automatic" failover (see LESSONS.md). Plan: give it the BrosTrend permanently, once its chipset is confirmed capture-capable. |
+| jacKed (Pi4B) | USB — BrosTrend 650 | Realtek `RTL8821CU` (`rtw88_8821cu`) — **confirmed, and same physical unit as x1's old AP dongle below, relocated not retired** | Monitor-mode capture / failover scanner | **Live and working** — closes the failover-automation gap (see LESSONS.md). But: this exact unit is throwing a repeating non-fatal driver `WARNING` during monitor-mode channel switching (30x in ~2h, see LESSONS.md), on a chipset already proven unstable in AP mode elsewhere. Provisional, not fully trusted yet. |
 | x1 | onboard WiFi | vendor unconfirmed | Station uplink to the home network | Working as a client radio. **Monitor-mode capability untested** — open question, see OPEN-QUESTIONS.md. |
 | x1 | USB — TP-Link Archer T2U Nano (AC600) | Realtek `RTL8811AU` | Runs the jack-link AP (the fleet's private local subnet) | **Freshly installed 2026-08-01** — a new purchase, swapped in today to test/gather signal numbers as a candidate replacement for the retired RTL8821CU behind the AP-crash history below. AP-mode stability not yet established; evaluation in progress. |
 | the-one (OnePlus 6T) | onboard WiFi | Qualcomm `ath10k_snoc` (WCN3990) | Either jack-link uplink **or** monitor capture — not both at once | Working, genuinely monitor-capable (unusual for a phone SoC radio), **capture only, no packet injection**. One radio total, so flipping to monitor drops the uplink. |
@@ -61,13 +61,18 @@ hardware purchases.
   One serious incident (a kernel deadlock on the OPi under sustained
   capture — see LESSONS) that has not reproduced since, but isn't fully
   cleared either.
-- **Realtek RTL8821CU (`rtw88_8821cu`)** — proven *unstable* in AP mode
-  specifically, with a well-documented firmware-crash/reload cycle. This
-  chipset has since been retired from x1's AP role, replaced 2026-08-01 by
-  a TP-Link T2U Nano (RTL8811AU) bought specifically to test as a
-  candidate. The T2U Nano's own AP-mode stability is unproven so far —
-  don't assume it inherits the 8821CU's instability, but don't assume it's
-  clean either until it's run unattended for a while.
+- **Realtek RTL8821CU (`rtw88_8821cu`)** — proven *unstable* in AP mode,
+  with a well-documented firmware-crash/reload cycle. Retired from x1's AP
+  role 2026-08-01 (replaced by a TP-Link T2U Nano, RTL8811AU, bought
+  specifically to test as a candidate — its own AP-mode stability is
+  unproven so far). This exact 8821CU unit didn't leave the fleet, though —
+  it's now jacKed's capture radio (see the jacKed row above), where it's
+  working but throwing a repeating non-fatal driver WARNING during channel
+  switching. Two different failure modes on the same chipset (AP-mode
+  firmware crash vs. monitor-mode channel-switch WARNING) — worth treating
+  this chipset family as generally not fully trustworthy unattended, in
+  either role, rather than writing off just the AP-mode issue as fixed by
+  switching roles.
 - **Qualcomm ath10k (`ath10k_snoc`)** — capture-capable, injection-incapable.
   Fine for passive wardriving, useless for anything that needs to transmit
   attack frames.

@@ -50,7 +50,7 @@ for a bigger confirmed one.
 |---|---|---|---|---|---|---|
 | Panda PAU0F AXE3000 | MT7921U | `mt7921u` (mainline) | Yes | — | Yes (no restriction) | **Assigned: stays on the OPi permanently.** Best-supported chipset of the three; no more shuffling it to jacKed. |
 | TP-Link Archer T2U Nano | RTL8811AU | out-of-tree (aircrack-ng/morrownr fork, not mainline) | Yes, with patched driver | Yes, with patched driver | Needs DFS channels avoided | **Assigned: stays on x1** as the AP radio — freshly swapped in 2026-08-01 to replace the retired, AP-unstable RTL8821CU, and currently being tested/measured in that role. Don't move it mid-evaluation; see the "TP-Link T2U Nano → stays on x1" bullet in question 2 below for why. |
-| BrosTrend 650 | Unconfirmed | Unconfirmed | Unconfirmed | Unconfirmed | Unconfirmed | **Assigned: goes to jacKed permanently**, closing the failover gap in LESSONS.md — pending a chipset check (`lsusb`) to confirm it's actually monitor-capable before relying on it. |
+| BrosTrend 650 | RTL8821CU (confirmed) | `rtw88_8821cu` (mainline) | Yes, working live | Untested | Untested | **Assigned: on jacKed now**, closing the failover gap. Same chipset already proven unstable in AP mode elsewhere in this fleet, and now also throwing a repeating (non-fatal) driver WARNING during monitor-mode channel switching — see LESSONS.md. Working today; not a chipset to fully trust unattended long-term. |
 
 ## 2. Where should the other two radios go?
 
@@ -64,15 +64,21 @@ radio.**
   fleet* offline at once when it's unavailable — reassigning it isn't a
   neutral placement decision, it's a deliberate fleet-wide outage. Leave it
   where it's already working.
-- **BrosTrend 650 → jacKed, permanently.** This is the one radio that
-  wasn't already pinned to a fleet-critical role, so it's the natural fix
-  for the failover gap: jacKed gets its own dongle instead of borrowing the
-  OPi's, so the failover watchdog can actually act automatically instead of
-  waiting for someone to relocate hardware. Action item: confirm the
-  BrosTrend's chipset with `lsusb`/`dmesg` once it's plugged into anything,
-  to make sure it actually supports monitor mode before trusting it for
-  this role — if it doesn't, jacKed stays without a dedicated radio (status
-  quo) until a fourth dongle is bought specifically for this.
+- **BrosTrend 650 → jacKed.** Confirmed live (`lsusb`/`lsmod`/`dmesg` on
+  jacKed): it's an RTL8821CU (driver `rtw88_8821cu`), and its MAC address
+  matches the exact dongle from x1's old AP-crash history — this isn't a
+  different unit, it's the same physical 8821CU, relocated rather than
+  retired. It closes the failover gap as planned (jacKed now has its own
+  capture radio instead of borrowing the OPi's) and is actively running
+  Kismet capture successfully as of this check. **But it's not a clean
+  bill of health** — see the new LESSONS.md entry: this exact chipset threw
+  a kernel WARNING 30 times in ~2 hours during monitor-mode channel
+  switching. System stayed healthy and Kismet kept working through it, so
+  it's provisionally usable, but this is the same chipset family already
+  proven unstable in AP mode elsewhere in this fleet — worth treating as
+  "working for now, watch it" rather than "solved," and a stronger
+  candidate to replace with a fourth, better-behaved radio if this recurs
+  or gets worse under longer runs.
 - **the-one (OnePlus 6T)** still has the single-radio link-or-monitor
   tradeoff, and stays that way for now — with all three dongles assigned to
   fixed core-infra roles above, there's nothing left to give it. This is an
