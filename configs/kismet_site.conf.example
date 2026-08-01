@@ -1,0 +1,10 @@
+# Example Kismet capture-source config for a MediaTek MT7921U-based node.
+#
+# Interface names like wlx<mac-without-colons> are how Linux predictably
+# names USB WiFi adapters — replace <mac> with the actual device's address.
+# No channel restriction needed for this chipset (no DFS wedge issue),
+# unlike Realtek rtw88-family adapters, which typically need to be pinned
+# off DFS channels to avoid driver-level instability.
+
+source=wlx<mac>:name=mt7921u_capture
+log_prefix=/path/to/loot/Kismet/

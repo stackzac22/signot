@@ -1,0 +1,24 @@
+# Example config for a Kismet -> MQTT alert bridge, one per scanning node.
+# Distinct NODE_NAME / MQTT_CLIENT_ID per node avoids client-id collisions.
+# MQTT_TOPIC is also templated per node so a subscriber (e.g. a Home
+# Assistant automation) can filter/route by node from the topic alone,
+# without having to parse each alert's payload. Subscribe to
+# kismet/alerts/wifi/+ to get everything across all nodes at once.
+
+KISMET_HOST=localhost
+KISMET_PORT=2501
+KISMET_USER=admin
+KISMET_PASS=CHANGE_ME
+
+MQTT_HOST=CHANGE_ME
+MQTT_PORT=1883
+MQTT_TLS=false
+MQTT_USER=CHANGE_ME
+MQTT_PASS=CHANGE_ME
+MQTT_CLIENT_ID=kismet-bridge-<node-name>
+MQTT_TOPIC=kismet/alerts/wifi/<node-name>
+
+NODE_NAME=<node-name>
+POLL_SECONDS=5
+NEW_DEVICE_ALERTS=false
+NEW_DEVICE_MIN_SIGNAL=-95

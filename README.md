@@ -1,0 +1,58 @@
+# Signot
+
+A self-taught home-lab build log: a small fleet of repurposed hardware doing
+distributed WiFi recon (wardriving / passive scanning), tied together over a
+private mesh, with a Home Assistant dashboard on top. This repo is the
+**architecture and lessons-learned record**, not the toolkit itself — it's
+what I point an LLM at when I want help reasoning about the next hardware
+decision, instead of re-explaining months of debugging from scratch.
+
+I'm self-taught (started from zero in December 2025), so treat this as a
+learning-in-public project. The goal isn't a product — it's building real
+capability by running real hardware into real problems and writing down what
+actually happened.
+
+## What's in the fleet
+
+| Nickname | Hardware | Role |
+|---|---|---|
+| **raspyjackboy** ("OPi") | OrangePi Zero 2W | Primary WiFi scanner |
+| **jacKed** | Raspberry Pi 4B | Backup/failover scanner + server-tier compute |
+| **x1** | Laptop (always-on) | Fleet hub: private AP, mesh VPN anchor, Home Assistant |
+| **the-one** | Repurposed OnePlus 6T | Opportunistic wardrive rig |
+
+All four sit on a private mesh VPN (tailnet) for management, plus a
+purpose-built local WiFi network (**jack-link**) that x1 broadcasts, so the
+scanning nodes can reach each other and a shared message bus even when the
+home network's client isolation would otherwise block them.
+
+## Docs
+
+- **[docs/RADIOS.md](docs/RADIOS.md)** — every radio in the fleet: chipset,
+  role, current status, and the failure modes each one has actually hit.
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — how the boxes talk to
+  each other: the mesh VPN, the local AP subnet, the message bus, the
+  dashboard, and the self-heal watchdogs that keep it all up unattended.
+- **[docs/LESSONS.md](docs/LESSONS.md)** — incident write-ups. Real bugs,
+  real root causes, in the order I found them.
+- **[docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md)** — the live planning
+  doc: what radio the OPi should get next, where the other spare radios
+  should go, whether x1's built-in WiFi card can pull double duty, and what
+  a sane end-state for the fleet looks like.
+
+## Related repos
+
+- [`Raspyjack`](https://github.com/stackzac22/Raspyjack) — my fork of the
+  actual RaspyJack toolkit (the code that runs on OPi/jacKed), including the
+  OrangePi port. This repo is deliberately kept separate from that one so
+  the architecture/planning notes aren't tangled up with a red-team-toolkit
+  fork's commit history.
+- [`presence-lab`](https://github.com/stackzac22/presence-lab) — a related
+  but distinct project: RF human-presence sensing (mmWave / WiFi-CSI / PIR),
+  not WiFi recon.
+
+## A note on scope
+
+Everything here has host-specific IPs, MAC addresses, and credentials
+scrubbed or genericized — this describes *how the architecture works*, not
+live connection details for the network it runs on.
