@@ -141,3 +141,70 @@ new radio purchase against:
   small-board USB controllers — budget for "try a different port class" or
   "route through a hub" as a normal part of bringing up any new dongle,
   not a sign something is broken.
+
+## 5. Fourth radio for jacKed — buy, don't relocate the Panda
+
+**Status: decided 2026-08-02, hardware ordered, arriving today or tomorrow
+(2026-08-02/03). Not yet physically installed — this section is the
+bring-up runbook for the moment it lands.**
+
+Trigger: BrosTrend's repeating monitor-mode-channel-switch kernel `WARNING`
+(LESSONS.md, ~30x in 2h) kept recurring, on a chipset already proven
+unstable in AP mode elsewhere in this fleet. Question 1's comparison table
+already flagged this exact scenario — "a stronger candidate to replace with
+a fourth, better-behaved radio if this recurs or gets worse under longer
+runs" — so this is that flagged trigger firing, not a new problem.
+
+**Why buy a fourth radio instead of moving BrosTrend to the OPi:**
+
+- The OPi already has a permanently-assigned capture radio (Panda AXE3000,
+  question 1) — the best-supported chipset of the three, not going
+  anywhere. Adding BrosTrend there is pure redundancy, not a fix.
+- jacKed's onboard radio has **zero monitor-mode capability, confirmed via
+  `iw phy`** (RADIOS.md) — a hard hardware limit, not a driver gap. Pulling
+  BrosTrend off jacKed without replacing it first would leave jacKed with
+  **no capture radio at all**, killing the exact failover-scanner role it
+  was bought to fill.
+- So the only way to demote BrosTrend without reopening the failover gap is
+  to give jacKed a *different* radio first, then pull BrosTrend.
+
+**The plan:**
+
+- New radio — **confirmed 2026-08-02: a second TP-Link Archer T2U Nano**,
+  same model as x1's (RTL8811AU, out-of-tree aircrack-ng/morrownr driver,
+  needs DFS channels avoided) — already ordered, arriving today/tomorrow.
+  Still worth an `lsusb` confirm on arrival per fleet habit (see the
+  BrosTrend-is-actually-the-old-AP-dongle entry in LESSONS.md for why), but
+  the model itself is no longer a guess. Becomes jacKed's **permanent**
+  capture/failover-scanner radio.
+- BrosTrend 650 gets demoted from "always plugged into jacKed" to
+  **hand-carried, injection-only** — pulled out only for tasks that
+  specifically need its long-range/injection strength, never left running
+  unattended for routine monitor duty where its instability is a live risk.
+
+**Bring-up checklist, in order, once it's physically in hand:**
+
+1. `lsusb` + `dmesg | tail` on jacKed — confirm actual chipset + bound
+   driver. Don't assume RTL8811AU (the T2U Nano chipset) just because it's
+   a TP-Link; confirm it like every other radio in this fleet has been
+   confirmed.
+2. `iw phy <n> info` — confirm `monitor` is in the supported interface
+   modes list before wiring it into anything.
+3. Get jacKed back on the tailnet first (it's mid-dropout as of this
+   writing — see fleet_status) and find the failover-scanner's actual
+   config/service file, then swap the interface reference from BrosTrend's
+   to the new radio's.
+4. Run the failover-scanner watchdog through at least one real cycle on the
+   new radio before calling it live — confirm Kismet actually starts
+   capture on it, not just that the interface enumerates.
+5. Physically unplug BrosTrend from jacKed once step 4 is clean. Leave it
+   out of any automated boot/service config — manual insert only from here
+   on.
+6. Once the new radio's proven stable for a few days, update RADIOS.md's
+   jacKed row and the RTL8821CU chipset-track-record note to reflect the
+   new assignment — that doc records what's actually running, not the plan.
+
+This keeps the fleet's existing rule intact (question 4: "keep AP/capture
+duty on a chipset actually proven stable in that role, separate from
+whatever's proven stable elsewhere") instead of making a convenience
+exception for the newest problem child.
