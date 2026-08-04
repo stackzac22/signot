@@ -33,6 +33,10 @@ home network's client isolation would otherwise block them.
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — how the boxes talk to
   each other: the mesh VPN, the local AP subnet, the message bus, the
   dashboard, and the self-heal watchdogs that keep it all up unattended.
+- **[docs/ZAP-OFFLOAD.md](docs/ZAP-OFFLOAD.md)** — a reusable pattern:
+  letting a small controller box (the 4GB Pi) drive a heavy scanner (OWASP
+  ZAP) that actually runs on a more capable node (the repurposed 6T), with a
+  hardened remote daemon and an update-proof way to wire it in.
 - **[docs/LESSONS.md](docs/LESSONS.md)** — incident write-ups. Real bugs,
   real root causes, in the order I found them.
 - **[docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md)** — the live planning

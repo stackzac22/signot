@@ -273,3 +273,76 @@ one problem" (closing the failover-automation gap) and "a still-open risk"
 (this WARNING loop) — those aren't in tension, they're just two different
 facts about the same piece of hardware that both need to stay visible
 rather than the good news quietly erasing the caveat.
+
+## A box couldn't reach a service on its own mesh-VPN address — but every other box could
+
+**Symptom:** stood up a daemon and bound it to a box's mesh-VPN IP. Every
+*other* node in the fleet reached its API there fine. The box itself,
+calling its own VPN IP, hung forever — no refusal, no timeout error, just a
+stall. Calling the same daemon on `127.0.0.1` from that same box worked
+instantly.
+
+**First guess (wrong):** the daemon's caller-allowlist was rejecting the
+call, or the API key was off — both would explain a self-call failing. Both
+were fine; peers using the identical URL and key succeeded.
+
+**Actual cause:** the mesh VPN ships its own packet-filter rule that drops
+VPN-range *source* traffic which didn't actually arrive on the VPN
+interface. When a node addresses its **own** VPN IP, the kernel recognizes
+it as a local address and short-circuits the packet over loopback — so it
+never traverses the VPN interface, and that drop rule black-holes it. It's
+not a bug in the daemon at all; it's a routing/firewall interaction one
+layer down, and there's no client-side flag that avoids it.
+
+**Fix:** make the daemon *also* listen on loopback. Its bind option only
+takes a single address, so bind it broadly (`0.0.0.0`) and then re-close the
+exposure with a host firewall chain applied **before** the daemon comes up:
+allow loopback, allow the VPN interface, drop the port on everything else.
+End state — the box reaches its own service over `127.0.0.1`, fleet peers
+reach it over the VPN, and the physical/home WiFi the box is joined to can't
+see the port at all.
+
+**A gotcha inside the fix:** the firewall backend silently *rejected* a
+single rule that tried to match two interfaces at once, leaving an empty
+chain — i.e. the port wide open — with no error surfaced inside the wrapping
+shell. Structure such a chain as allow-early-then-drop with one interface
+match per rule, and **verify the chain actually populated** rather than
+trusting the command's exit code.
+
+**Lesson:** "everyone else can reach it but the host itself can't" points at
+the network layer, not the service. When a self-addressed call behaves
+differently from an identical call made by a peer, suspect how the host
+routes its own address before touching the service's config. (This came up
+standing up the remote scanner daemon in [ZAP-OFFLOAD.md](ZAP-OFFLOAD.md).)
+
+## An upstream auto-updater kept silently reverting local fixes — the durable answer was to stop editing the repo
+
+**Symptom:** a local change to a vendored upstream tool would work, then
+quietly undo itself. A capability that had been configured and verified
+working would be back to its stock/disabled state later, with no one having
+touched it — the regression always showed up detached from any action.
+
+**Root cause:** the tool's own updater runs `git reset --hard origin/main`.
+That discards *every* uncommitted edit in the working tree, so anything
+customized in-tree survives only until the next update and then vanishes.
+Because the update runs unattended, the "un-fix" looks spontaneous.
+
+**Fix (the pattern, not a one-off):** stop keeping local edits in the repo.
+Keep them as **a patch file plus an environment drop-in that both live
+*outside* the repo's directory**, and re-apply the patch on **every service
+start** via a pre-start hook that is:
+- **idempotent** — detects "already applied" and does nothing;
+- **guarded** — only touches the tree if the patch lands cleanly;
+- **non-fatal** — a patch that no longer applies because upstream moved the
+  code underneath it is logged loudly for a human to rebase, but never
+  blocks the service from starting.
+
+Config that must persist (endpoints, keys, a lowered resource gate) goes in
+the out-of-repo env drop-in and pre-start scripts, never a tracked file.
+
+**Lesson:** when something keeps "un-fixing itself," suspect an automated
+process re-asserting a baseline and move your change somewhere that process
+can't reach, instead of fighting it edit-by-edit. There's a bonus: if
+upstream ever adds the feature for real, your out-of-repo patch simply stops
+applying cleanly and you delete it — no merge conflict, no lingering fork.
+This is the mechanism the [ZAP-OFFLOAD.md](ZAP-OFFLOAD.md) wiring rides on.
