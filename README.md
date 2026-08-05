@@ -69,6 +69,10 @@ home network's client isolation would otherwise block them.
   scanning with a LoRa/Meshtastic uplink. Kept as its own firmware repo (its
   own build/flash lifecycle, like `Raspyjack`) and linked here rather than
   vendored into the notes.
+- [`fleet-bridge`](https://github.com/stackzac22/fleet-bridge) — the ESP32
+  WiFi-to-WiFi NAT bridge the fleet sits on: STA joins an upstream hotspot, AP
+  rebroadcasts a fixed SSID, NAPT routes clients out through the uplink. Headless
+  (WROOM) and TTGO T-Display variants. Its own firmware repo, linked here.
 
 ## A note on scope
 
