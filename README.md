@@ -19,12 +19,22 @@ actually happened.
 | **raspyjackboy** ("OPi") | OrangePi Zero 2W | Primary WiFi scanner |
 | **jacKed** | Raspberry Pi 4B | Backup/failover scanner + server-tier compute |
 | **x1** | Laptop (always-on) | Fleet hub: private AP, mesh VPN anchor, Home Assistant |
-| **the-one** | Repurposed OnePlus 6T | Opportunistic wardrive rig |
+| **the-one** | Repurposed OnePlus 6T (Kali NetHunter, 8-core, ~7.7GB) | Heavy-lift sidekick — local 7B LLM host, remote OWASP ZAP engine, opportunistic wardrive rig |
 
 All four sit on a private mesh VPN (tailnet) for management, plus a
 purpose-built local WiFi network (**jack-link**) that x1 broadcasts, so the
 scanning nodes can reach each other and a shared message bus even when the
 home network's client isolation would otherwise block them.
+
+> **On `the-one` — the sleeper of the fleet.** It's a retired OnePlus 6T, but
+> under Kali NetHunter it's a full ARM64 Linux box with *more RAM and cores
+> than the "real computers" it serves*. So it's not just a scanner — it's the
+> fleet's borrowable compute: a small board (like the 4GB Pi) can offload a
+> job it could never host itself — a local 7B LLM, a full OWASP ZAP scan —
+> onto it over the mesh, then go back to being small. A repurposed flagship
+> phone with a real Linux userland is a genuinely underrated always-on
+> machine; [docs/ZAP-OFFLOAD.md](docs/ZAP-OFFLOAD.md) is one worked example,
+> and I've almost certainly only scratched the surface of what it can take on.
 
 ## Docs
 
@@ -54,6 +64,11 @@ home network's client isolation would otherwise block them.
 - [`presence-lab`](https://github.com/stackzac22/presence-lab) — a related
   but distinct project: RF human-presence sensing (mmWave / WiFi-CSI / PIR),
   not WiFi recon.
+- [`bushnode`](https://github.com/stackzac22/bushnode) — an outdoor sensor
+  node in the fleet: dual-radio ESP32 (Heltec V3 + XIAO C5) passive WiFi
+  scanning with a LoRa/Meshtastic uplink. Kept as its own firmware repo (its
+  own build/flash lifecycle, like `Raspyjack`) and linked here rather than
+  vendored into the notes.
 
 ## A note on scope
 
