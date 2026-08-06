@@ -47,6 +47,10 @@ home network's client isolation would otherwise block them.
   letting a small controller box (the 4GB Pi) drive a heavy scanner (OWASP
   ZAP) that actually runs on a more capable node (the repurposed 6T), with a
   hardened remote daemon and an update-proof way to wire it in.
+- **[docs/LOCAL-LLM-ON-A-PHONE.md](docs/LOCAL-LLM-ON-A-PHONE.md)** — the
+  sister pattern: the fleet's 7B language model runs on the repurposed 6T,
+  and the small boards call it over the mesh instead of hosting a model they
+  can't fit — plus the honest field note on the GPU offload that didn't work.
 - **[docs/LESSONS.md](docs/LESSONS.md)** — incident write-ups. Real bugs,
   real root causes, in the order I found them.
 - **[docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md)** — the live planning
